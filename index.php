@@ -122,7 +122,7 @@ if(isset($_GET['city'])){
         </form>
         <div id="result" style="display:none;">
         <?php if($weather): ?>
-           <div class='card mx-auto' style='max-width: 900px;'>
+           <div class='card mx-auto' style='max-width: 900px; background-image: url(https://images.hdqwalls.com/wallpapers/clouds-summer-weather-5k-1b.jpg); position: relative; background-size:cover; background-repeat:no-repeat; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,0.35);'>
                 <div class='row g-0 align-items-center'>
                     <div class='col-md-5 d-flex justify-content-center p-3'>
                         <div class='text-center'>
