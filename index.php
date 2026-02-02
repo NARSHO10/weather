@@ -39,7 +39,9 @@ if(isset($_GET['city'])){
                         'city' => $data['name'],
                         'temp' => $data['main']['temp'],
                         'desc' => ucfirst($data['weather'][0]['description']),
-                        'icon' => $data['weather'][0]['icon']
+                        'icon' => $data['weather'][0]['icon'],
+                        'lat' => isset($data['coord']['lat']) ? $data['coord']['lat'] : null,
+                        'lon' => isset($data['coord']['lon']) ? $data['coord']['lon'] : null,
                     ];
                 }else{
                     $msg = isset($data['message']) ? ucfirst($data['message']) : 'City not found';
@@ -56,11 +58,17 @@ if(isset($_GET['city'])){
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta name='viewport' width='device-width , initial-scale=1.0'>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
     <title>Weather App</title>
     <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css' rel='stylesheet'>
+    <!-- Leaflet CSS & JS (for responsive interactive maps) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
+        /* Responsive map container: adjusts height to viewport while staying usable on small screens */
+        .map-container{ width:100%; height:40vh; min-height:220px; max-height:600px; border-radius:8px; overflow:hidden; margin-top:0.5rem; }
+        @media (max-width:576px){ .map-container{ height:32vh; min-height:180px; } }
         body{
             min-height:100vh;
             background-image: url('https://static.vecteezy.com/system/resources/thumbnails/038/563/640/small_2x/ai-generated-the-sky-was-dark-with-pouring-rain-accompanied-by-nimbostratus-clouds-that-covered-the-entire-sky-photo.jpg');
@@ -104,19 +112,35 @@ if(isset($_GET['city'])){
 <body>
     <div class='container py-5'>
         <h1 class='text-center mb-4'>Weather App </h1>
-        <form method = 'get' class='d-flex justify-content-center mb-4'>
-            <input type = 'text' name = 'city' id='cityInput' class='form-control w-50' placeholder='Enter city name' required>
-            <button type = 'submit' class='btn btn-primary ms-2'>Get weather</button>
+        <form method='get' class='row g-2 justify-content-center mb-4'>
+            <div class='col-12 col-md-6'>
+                <input type='text' name='city' id='cityInput' class='form-control' placeholder='Enter city name' required>
+            </div>
+            <div class='col-12 col-md-auto d-grid'>
+                <button type='submit' class='btn btn-primary w-100 w-md-auto'>Get weather</button>
+            </div>
         </form>
         <div id="result" style="display:none;">
         <?php if($weather): ?>
-           <div class='card mx-auto' style='max-width: 400px;'>
-                <div class='card-body text-center'>
-                    <h3 class='card-title'><?=$weather['city']; ?></h3>
-                    <img src="https://openweathermap.org/img/wn/<?=$weather['icon']; ?>@2x.png" alt="weather icon">
-                    <h4 class='mt-2'><?=$weather['temp']; ?> °C</h4>
-                    <p class='text-muted'><?=$weather['desc']; ?></p>
+           <div class='card mx-auto' style='max-width: 900px;'>
+                <div class='row g-0 align-items-center'>
+                    <div class='col-md-5 d-flex justify-content-center p-3'>
+                        <div class='text-center'>
+                            <h3 class='card-title mb-1'><?=$weather['city']; ?></h3>
+                            <img src="https://openweathermap.org/img/wn/<?=$weather['icon']; ?>@2x.png" alt="weather icon">
+                            <h4 class='mt-2'><?=$weather['temp']; ?> °C</h4>
+                            <p class='text-muted'><?=$weather['desc']; ?></p>
+                        </div>
+                    </div>
+                    <div class='col-md-7'>
+                        <div id="map" class="map-container"></div>
+                    </div>
                 </div>
+            </div>
+            <div class='text-center mt-2'>
+                <?php if(!empty($weather['lat']) && !empty($weather['lon'])): ?>
+                    <a href="https://www.openstreetmap.org/?mlat=<?=$weather['lat'];?>&mlon=<?=$weather['lon'];?>#map=12/<?=$weather['lat'];?>/<?=$weather['lon'];?>" target="_blank" rel="noopener" class="btn btn-primary btn-sm">Open in OpenStreetMap</a>
+                <?php endif; ?>
             </div>
         <?php elseif($error): ?>
             <div class='alert alert-danger d-flex align-items-center' role='alert'>
@@ -149,6 +173,28 @@ if(isset($_GET['city'])){
             } else {
                 if(input) input.focus();
             }
+
+            // Initialize map when coordinates are available from server-side response
+            <?php if($weather && !empty($weather['lat']) && !empty($weather['lon'])): ?>
+            (function(){
+                try{
+                    var lat = <?= json_encode($weather['lat']); ?>;
+                    var lon = <?= json_encode($weather['lon']); ?>;
+                    var popupContent = <?= json_encode($weather['city'] . "<br>" . $weather['temp'] . " °C — " . $weather['desc']); ?>;
+                    var mapEl = document.getElementById('map');
+                    if(mapEl){
+                        var map = L.map('map', {scrollWheelZoom: false}).setView([lat, lon], 10);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            maxZoom: 19,
+                            attribution: '&copy; OpenStreetMap contributors'
+                        }).addTo(map);
+                        L.marker([lat, lon]).addTo(map).bindPopup(popupContent).openPopup();
+                        // Force map to render properly after CSS transitions
+                        setTimeout(function(){ map.invalidateSize(); }, 200);
+                    }
+                }catch(e){ console.warn('Map init failed', e); }
+            })();
+            <?php endif; ?>
         });
         </script>
         <?php endif; ?>
