@@ -1,0 +1,41 @@
+  /* Responsive map container: adjusts height to viewport while staying usable on small screens */
+        .map-container{ width:100%; height:40vh; min-height:220px; max-height:600px; border-radius:8px; overflow:hidden; margin-top:0.5rem; }
+        @media (max-width:576px){ .map-container{ height:32vh; min-height:180px; } }
+        body{
+            min-height:100vh;
+            background-image: url('https://static.vecteezy.com/system/resources/thumbnails/038/563/640/small_2x/ai-generated-the-sky-was-dark-with-pouring-rain-accompanied-by-nimbostratus-clouds-that-covered-the-entire-sky-photo.jpg');
+            background-size:cover;
+            background-position:center;
+            background-repeat:no-repeat;
+            background-attachment:fixed;
+            background-color:#1f2b34;
+            color:#fff;
+        }
+        body::before{
+            content:'';
+            position:fixed;
+            inset:0;
+            background:rgba(0,0,0,0.45);
+            z-index:0;
+        }
+        .container{position:relative;z-index:1;}
+        .card{
+            background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250,250,250,0.95));
+            border-radius:12px;
+            box-shadow:0 8px 30px rgba(0,0,0,0.35);
+            color:#0b1b23;
+            overflow:hidden;
+        }
+        .card .card-body{
+            background:transparent;
+            color:#0b1b23;
+            padding:1.75rem;
+        }
+        .card .card-title{
+            color:#07202a;
+            font-weight:700;
+            margin-bottom:0.5rem;
+        }
+        .card p.text-muted{
+            color:#4b5563 !important;
+        }
